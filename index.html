@@ -1,183 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kweet's Icons (Enhanced)</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #fff;
-    }
-    .title-bar {
-      background: linear-gradient(to right, #6a0dad, #32cd32);
-      color: white;
-      padding: 16px;
-      text-align: center;
-      font-size: 1.5em;
-      font-weight: bold;
-    }
-    .main-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding: 20px;
-      gap: 20px;
-    }
-    .table-container {
-      flex: 3;
-    }
-    .search-container {
-      flex: 1;
-      text-align: right;
-    }
-    .search-container input[type="text"] {
-      padding: 8px;
-      width: 100%;
-      font-size: 1em;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-    th, td {
-      text-align: left;
-      padding: 8px;
-      border: 1px solid #ccc;
-    }
-    thead tr {
-      background-color: #f2f2f2;
-    }
-    tr.category-header td {
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-    button {
-      padding: 4px 8px;
-      margin-left: 4px;
-      font-size: 0.9em;
-      cursor: pointer;
-    }
-    .form-section {
-      padding: 20px;
-      border-top: 2px solid #ccc;
-    }
-    .form-section input, .form-section select {
-      padding: 8px;
-      margin: 5px;
-      font-size: 1em;
-    }
-  </style>
-  <script>
-    function filterTable() {
-      const input = document.getElementById("searchInput").value.toLowerCase();
-      const rows = document.querySelectorAll("tbody tr");
-      let currentCategory = null;
-      let categoryHasMatch = false;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kweet's Icons (Persistent)</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background-color: #fff;
+  }
+  .title-bar {
+    background: linear-gradient(to right, #6a0dad, #32cd32);
+    color: white;
+    padding: 16px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  .main-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    gap: 20px;
+  }
+  .table-container {
+    flex: 3;
+    overflow-x: auto;
+  }
+  .search-container {
+    flex: 1;
+    text-align: right;
+  }
+  .search-container input[type="text"] {
+    padding: 8px;
+    width: 100%;
+    font-size: 1em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 350px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+  }
+  thead tr {
+    background-color: #f2f2f2;
+  }
+  tr.category-header td {
+    font-weight: bold;
+    font-size: 1.1em;
+    background-color: #ddd;
+  }
+  button {
+    padding: 4px 8px;
+    margin-left: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  .form-section {
+    padding: 20px;
+    border-top: 2px solid #ccc;
+  }
+  .form-section input, .form-section select {
+    padding: 8px;
+    margin: 5px;
+    font-size: 1em;
+  }
+</style>
+<script>
+  const STORAGE_KEY = "kweetMacros";
 
-      rows.forEach(row => {
-        if (row.classList.contains("category-header")) {
-          if (currentCategory && !categoryHasMatch) {
-            currentCategory.style.display = "none";
-          }
-          currentCategory = row;
-          categoryHasMatch = false;
-          row.style.display = "";
-        } else {
-          const text = row.textContent.toLowerCase();
-          const match = text.includes(input);
-          row.style.display = match ? "" : "none";
-          if (match) categoryHasMatch = true;
+  // Default macros data
+  const defaultData = [
+    {
+      category: "🔵 FTR (First Time Response)",
+      macros: [
+        "🆕 First Touch",
+        "🙋‍♀️ First Time Response – Consignment Questions",
+        "📦 First Time Response – Item Status",
+        "💬 First Time Response – General Inquiry",
+        "📦 RTC Request – Item Not Wanted",
+        "📦 RTC Request – Post Discount"
+      ],
+      bgColor: "#e0f0ff"
+    },
+    {
+      category: "🟡 Follow-Up / Ongoing",
+      macros: [
+        "🔁 Processing Delay – High-Value Items",
+        "🔎 Price Increase – Not Sold",
+        "🧵 Consignor Concerns – Commission & Control",
+        "📤 Missing Client Info – Unable to Locate"
+      ],
+      bgColor: "#fff8dc"
+    },
+    {
+      category: "🟢 Resolutions / Closure",
+      macros: [
+        "✅ Survey Completed",
+        "📬 Return Request Accepted",
+        "📭 Item Returned to Consignor"
+      ],
+      bgColor: "#e0ffe0"
+    },
+    {
+      category: "🔴 Escalations / Special Handling",
+      macros: [
+        "❌ Real Big Sale – Final Sale",
+        "❗ High-Value Item Concern – Delayed",
+        "🧨 Item Flagged – “Questionable Authenticity”"
+      ],
+      bgColor: "#ffe0e0"
+    },
+    {
+      category: "🟣 Internal Use / Luxury Manager Support",
+      macros: [
+        "📎 Missing Client Info – Unable to Locate",
+        "📘 Info Request – Need SKU or CID"
+      ],
+      bgColor: "#f3e0ff"
+    },
+    {
+      category: "🟠 Pricing & Discounts",
+      macros: [
+        "🏷️ Discount Removal Requested",
+        "🔖 Discount Addition Requested",
+        "💲 Price Increase – Not Sold",
+        "📉 Discount Without Approval – Apology & RTC Option"
+      ],
+      bgColor: "#ffe7cc"
+    }
+  ];
+
+  // Load macros from localStorage or use default
+  function loadData() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+    return defaultData;
+  }
+
+  // Save macros to localStorage
+  function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  // Render table rows from data
+  function renderTable(data) {
+    const tbody = document.querySelector("tbody");
+    tbody.innerHTML = "";
+    data.forEach(section => {
+      // Category header row
+      const catRow = document.createElement("tr");
+      catRow.className = "category-header";
+      catRow.style.backgroundColor = section.bgColor || "#ddd";
+      const catTd = document.createElement("td");
+      catTd.colSpan = 1;
+      catTd.textContent = section.category;
+      catRow.appendChild(catTd);
+      tbody.appendChild(catRow);
+
+      // Macro rows
+      section.macros.forEach(macro => {
+        const row = document.createElement("tr");
+        const td = document.createElement("td");
+        td.textContent = macro + " ";
+        // Copy button
+        const copyBtn = document.createElement("button");
+        copyBtn.textContent = "Copy";
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(macro).then(() => {
+            alert(`Copied: ${macro}`);
+          });
+        };
+        td.appendChild(copyBtn);
+
+        // Edit button
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.onclick = () => editMacro(macro, section.category);
+        td.appendChild(editBtn);
+
+        row.appendChild(td);
+        tbody.appendChild(row);
+      });
+    });
+  }
+
+  // Edit a macro label
+  function editMacro(oldMacro, category) {
+    const newLabel = prompt("Edit macro text:", oldMacro);
+    if (!newLabel || newLabel.trim() === "") return;
+
+    const data = loadData();
+    const section = data.find(s => s.category === category);
+    if (!section) return;
+
+    const index = section.macros.indexOf(oldMacro);
+    if (index > -1) {
+      section.macros[index] = newLabel.trim();
+      saveData(data);
+      renderTable(data);
+      filterTable();
+    }
+  }
+
+  // Add new macro to category (or create new category)
+  function addMacro() {
+    const cat = document.getElementById("newCategory").value.trim();
+    const icon = document.getElementById("newIcon").value.trim();
+    const label = document.getElementById("newLabel").value.trim();
+    if (!cat || !icon || !label) {
+      alert("Please fill in all fields (category, icon, label).");
+      return;
+    }
+
+    let data = loadData();
+    let section = data.find(s => s.category.toLowerCase() === cat.toLowerCase());
+    if (!section) {
+      section = {
+        category: icon + " " + cat,
+        macros: [],
+        bgColor: "#ddd"
+      };
+      data.push(section);
+    }
+    section.macros.push(icon + " " + label);
+
+    saveData(data);
+    renderTable(data);
+    filterTable();
+
+    document.getElementById("newCategory").value = "";
+    document.getElementById("newIcon").value = "";
+    document.getElementById("newLabel").value = "";
+  }
+
+  // Filter macros and categories based on search input
+  function filterTable() {
+    const filter = document.getElementById("searchInput").value.toLowerCase();
+    const tbody = document.querySelector("tbody");
+    const rows = tbody.querySelectorAll("tr");
+    let currentCategoryRow = null;
+    let categoryHasMatch = false;
+
+    rows.forEach(row => {
+      if (row.classList.contains("category-header")) {
+        if (currentCategoryRow && !categoryHasMatch) {
+          currentCategoryRow.style.display = "none";
         }
-      });
-
-      if (currentCategory && !categoryHasMatch) {
-        currentCategory.style.display = "none";
+        currentCategoryRow = row;
+        categoryHasMatch = false;
+        row.style.display = "";
+      } else {
+        const text = row.textContent.toLowerCase();
+        const isMatch = text.includes(filter);
+        row.style.display = isMatch ? "" : "none";
+        if (isMatch) categoryHasMatch = true;
       }
+    });
+
+    if (currentCategoryRow && !categoryHasMatch) {
+      currentCategoryRow.style.display = "none";
     }
+  }
 
-    function copyMacro(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        alert(`Copied: ${text}`);
-      });
-    }
-
-    function editMacro(btn) {
-      const row = btn.closest("tr");
-      const cell = row.querySelector("td");
-      const oldText = cell.textContent.trim();
-
-      const newText = prompt("Edit macro label + icon:", oldText);
-      if (newText !== null && newText.trim() !== "") {
-        cell.innerHTML = `${newText} 
-          <button onclick="copyMacro('${newText}')">Copy</button>
-          <button onclick="editMacro(this)">Edit</button>`;
-      }
-    }
-
-    function addMacro() {
-      const cat = document.getElementById("newCategory").value.trim();
-      const icon = document.getElementById("newIcon").value.trim();
-      const label = document.getElementById("newLabel").value.trim();
-      if (!cat || !icon || !label) return alert("All fields required.");
-
-      const table = document.querySelector("tbody");
-      let targetCat = [...table.querySelectorAll(".category-header")]
-        .find(r => r.textContent.toLowerCase().includes(cat.toLowerCase()));
-
-      if (!targetCat) {
-        const newCatRow = document.createElement("tr");
-        newCatRow.className = "category-header";
-        newCatRow.innerHTML = `<td colspan="1">${icon} ${cat}</td>`;
-        table.appendChild(newCatRow);
-        targetCat = newCatRow;
-      }
-
-      const newRow = document.createElement("tr");
-      newRow.innerHTML = `<td>${icon} ${label} 
-        <button onclick="copyMacro('${icon} ${label}')">Copy</button>
-        <button onclick="editMacro(this)">Edit</button></td>`;
-      table.insertBefore(newRow, targetCat.nextSibling);
-
-      document.getElementById("newCategory").value = "";
-      document.getElementById("newIcon").value = "";
-      document.getElementById("newLabel").value = "";
-    }
-  </script>
+  window.onload = () => {
+    const data = loadData();
+    renderTable(data);
+    document.getElementById("searchInput").addEventListener("input", filterTable);
+  };
+</script>
 </head>
 <body>
-  <div class="title-bar">Kweet's Icons</div>
+  <div class="title-bar">Kweet's Icons (Persistent)</div>
   <div class="main-container">
     <div class="table-container">
       <table>
         <thead>
-          <tr>
-            <th>Icon + Macro</th>
-          </tr>
+          <tr><th>Icon + Macro</th></tr>
         </thead>
         <tbody>
-          <tr class="category-header" style="background-color:#e0f0ff;"><td>🔵 FTR</td></tr>
-          <tr><td>🆕 First Touch <button onclick="copyMacro('🆕 First Touch')">Copy</button><button onclick="editMacro(this)">Edit</button></td></tr>
-          <tr><td>🙋‍♀️ Consignment Qs <button onclick="copyMacro('🙋‍♀️ Consignment Qs')">Copy</button><button onclick="editMacro(this)">Edit</button></td></tr>
-
-          <tr class="category-header" style="background-color:#fff8dc;"><td>🟡 Follow-Up</td></tr>
-          <tr><td>🔁 Processing Delay <button onclick="copyMacro('🔁 Processing Delay')">Copy</button><button onclick="editMacro(this)">Edit</button></td></tr>
-
-          <tr class="category-header" style="background-color:#ffe7cc;"><td>🟠 Pricing</td></tr>
-          <tr><td>🏷️ Discount Removal <button onclick="copyMacro('🏷️ Discount Removal')">Copy</button><button onclick="editMacro(this)">Edit</button></td></tr>
+          <!-- Rows generated by JS -->
         </tbody>
       </table>
     </div>
     <div class="search-container">
-      <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search macros..." />
+      <input type="text" id="searchInput" placeholder="Search macros..." />
     </div>
   </div>
   <div class="form-section">
     <h3>Add New Macro</h3>
     <input type="text" id="newCategory" placeholder="Category (e.g. RTC)" />
-    <select id="newIcon">
+    <select id="newIcon" aria-label="Icon selector">
       <option value="">Select Icon</option>
       <option value="🔵">🔵</option>
       <option value="🟡">🟡</option>
